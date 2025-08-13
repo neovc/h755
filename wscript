@@ -49,9 +49,9 @@ def configure(ctx):
     ctx.find_program(ctx.options.toolchain + 'objcopy', var='OBJCOPY')
 
     # Generate build arguments
-    ctx.env.append_unique('CFLAGS', ['-Wall', '-DSTM32H7', '-fno-common', '-Os', '-mthumb', '-mcpu=cortex-m7', '-mhard-float', '-mfpu=fpv4-sp-d16', '-fno-exceptions', '-ffunction-sections', '-fdata-sections', '-Wempty-body', '-Wtype-limits', '-Wmissing-parameter-type', '-Wuninitialized', '-fno-strict-aliasing', '-Wno-unused-function', '-Wno-stringop-truncation', '-fsingle-precision-constant'])
+    ctx.env.append_unique('CFLAGS', ['-Wall', '-DSTM32H7', '-fno-common', '-Os', '-mthumb', '-mcpu=cortex-m7', '-mhard-float', '-mfpu=fpv5-d16', '-fno-exceptions', '-ffunction-sections', '-fdata-sections', '-Wempty-body', '-Wtype-limits', '-Wmissing-parameter-type', '-Wuninitialized', '-fno-strict-aliasing', '-Wno-unused-function', '-Wno-stringop-truncation', '-fsingle-precision-constant'])
 
-    ctx.env.append_unique('LINKFLAGS', ['--static', '-nostartfiles', '-Wl,--gc-sections', '-mthumb', '-mcpu=cortex-m7', '-mhard-float', '-mfpu=fpv4-sp-d16'])
+    ctx.env.append_unique('LINKFLAGS', ['--static', '-nostartfiles', '-Wl,--gc-sections', '-mthumb', '-mcpu=cortex-m7', '-mhard-float', '-mfpu=fpv5-d16'])
 
     ctx.env.append_unique('LDFLAGS', ['--specs=nano.specs', '-Wl,--start-group', '-lc', '-lgcc', '-lnosys', '-Wl,--end-group', '-lm'])
 
