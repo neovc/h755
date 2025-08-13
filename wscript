@@ -24,7 +24,7 @@ libopencm3_revision_date = os.popen('cd libopencm3 && git log --pretty=format:"%
 def down_libopencm3():
     if not os.path.exists('libopencm3'):
         print('begin downloading libopencm3 library...\n')
-        os.system('git clone git@github.com:neovc/stm32wl libopencm3')
+        os.system('git clone git@github.com:neovc/stm32h7 libopencm3')
 
 def update_libopencm3():
     os.system('cd libopencm3 && git pull && make TARGETS=stm32/h7')
