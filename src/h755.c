@@ -14,6 +14,7 @@
 #include <libopencm3/cm3/vector.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/pwr.h>
+#include <libopencm3/stm32/iwdg.h>
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/syscfg.h>
 #include <libopencm3/stm32/gpio.h>
@@ -26,7 +27,7 @@ extern unsigned __app_size__, __app_start__;
 
 uint32_t rom_app_size = 0, app_start = 0;
 uint32_t calc_crc, orig_crc;
-int uptime = 0;
+int uptime = 0, to_feed_iwdg = 0;
 
 int _write(int file, char *ptr, int len);
 uint8_t freertos_started = 0, boot_cause = 0;
@@ -319,6 +320,8 @@ init_task(void *unused)
 	}
 
 	while (1) {
+		if (to_feed_iwdg)
+			iwdg_reset();
 		vTaskDelay(pdMS_TO_TICKS(2000));
 	}
 }
@@ -413,8 +416,12 @@ main(void)
 	flash_prefetch_enable();
 	flash_set_ws((RUNNING_CLOCK > 48?2:1));
 	setup_usart3();
+	iwdg_set_period_ms(3000); /* 3s */
 
 	boot_cause = get_boot_cause();
+
+	/* Start IWDG */
+	iwdg_start();
 
 	rom_app_size = (uint32_t) (&__app_size__);
 	app_start = (uint32_t) (&__app_start__);
@@ -425,6 +432,7 @@ main(void)
 	if (pdPASS != xTaskCreate(init_task, "INIT", 500, NULL, 4, NULL)) {
 		printf("init task error\n");
 	}
+	iwdg_reset();
 	vTaskStartScheduler();
 }
 
