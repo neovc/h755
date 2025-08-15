@@ -19,8 +19,14 @@
 
 MEMORY
 {
-	rom (rx) : ORIGIN = 0x08000000, LENGTH = 2048K
-	ram (rwx) : ORIGIN = 0x20000000, LENGTH = 1024K
+	rom (rx) :       ORIGIN = 0x08000000, LENGTH = 2048K
+	ram (rwx) :      ORIGIN = 0x20000000, LENGTH = 128K
+	axisram (rwx) :  ORIGIN = 0x24000000, LENGTH = 512K
+	sram1 (rwx) :    ORIGIN = 0x30000000, LENGTH = 128K
+	sram2 (rwx) :    ORIGIN = 0x30020000, LENGTH = 128K
+	sram3 (rwx) :    ORIGIN = 0x30040000, LENGTH = 32K
+	sram4 (rwx) :    ORIGIN = 0x38000000, LENGTH = 64K
+	backup (rwx) :   ORIGIN = 0x38800000, LENGTH = 32K
 }
 
 /* Include the common ld script. */
