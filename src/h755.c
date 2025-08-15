@@ -22,7 +22,55 @@
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/usart.h>
 
+enum rcc_clock {
+        RCC_CLOCK_CONFIG_HSI_480M,
+        RCC_CLOCK_CONFIG_HSE25M_PLL_480M,
+        RCC_CLOCK_CONFIG_END
+};
+
 //extern const struct rcc_clock_scale rcc_clock_config[];
+const struct rcc_pll_config rcc_clock_config[] = {
+	{ /* 480MHz PLL from HSI */
+		.sysclock_source = RCC_PLL, /* HSI 64M */
+		.pll_source = RCC_PLLCKSELR_PLLSRC_HSI,
+		.hse_frequency = 25 * 1000000,
+		.pll1 = {
+			.divm = 4, /* 64/4 = 16M */
+			.divn = 30, /* 16*30 = 480M */
+			.divp = 2, /* DIV2 */
+			.divq = 2,
+			.divr = 2,
+		},
+		.pll2 = {
+			.divm = 4, /* 64/4 = 16M */
+			.divn = 30,
+			.divp = 2, /* DIV2 */
+			.divq = 2,
+			.divr = 2,
+		},
+		.pll3 = {
+			.divm = 4, /* 64/4 = 16M */
+			.divn = 30,
+			.divp = 2, /* DIV2 */
+			.divq = 2,
+			.divr = 2,
+		},
+		/* domain 1 */
+		.core_pre = RCC_D1CFGR_D1CPRE_DIV2,
+		.hpre = RCC_D1CFGR_D1HPRE_DIV2,
+		.ppre3 = RCC_D1CFGR_D1PPRE_DIV2,
+		/* domain 2 */
+		.ppre1 = RCC_D2CFGR_D2PPRE_DIV2,
+		.ppre2 = RCC_D2CFGR_D2PPRE_DIV2,
+		/* domain 3 */
+		.ppre4 = RCC_D3CFGR_D3PPRE_DIV2,
+		.flash_waitstates = FLASH_ACR_LATENCY_3WS, // FOR ALL F_ACLK
+		.power_mode = PWR_SYS_LDO,
+		.voltage_scale = PWR_VOS_SCALE_1,
+		.smps_level = PWR_CR3_SMPSLEVEL_2P5V,
+	},
+};
+
 extern unsigned __app_size__, __app_start__;
 
 uint32_t rom_app_size = 0, app_start = 0;
@@ -47,7 +95,7 @@ setup_usart3(void)
 	rcc_periph_clock_enable(RCC_USART3);
 
 	gpio_mode_setup(GPIOD, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO8 | GPIO9);
-	gpio_set_af(GPIOD, GPIO_AF7, GPIO9 | GPIO9);
+	gpio_set_af(GPIOD, GPIO_AF7, GPIO8 | GPIO9);
 
 	usart_set_baudrate(USART3, 115200);
 	usart_set_databits(USART3, 8);
@@ -412,9 +460,7 @@ _write(int file, char *ptr, int len)
 int
 main(void)
 {
-	// rcc_clock_setup(&(rcc_clock_config[RCC_CLOCK_CONFIG_HSI_PLL_64MHZ]));
-	flash_prefetch_enable();
-	flash_set_ws((RUNNING_CLOCK > 48?2:1));
+	rcc_clock_setup_pll(&(rcc_clock_config[0]));
 	setup_usart3();
 	iwdg_set_period_ms(3000); /* 3s */
 
@@ -426,6 +472,7 @@ main(void)
 	rom_app_size = (uint32_t) (&__app_size__);
 	app_start = (uint32_t) (&__app_start__);
 
+	printf("HELLO WORLD\n");
 	check_bin_file(app_start, rom_app_size, &calc_crc, &orig_crc);
 
 	printf("APP CALC 0x%x %s ORIG 0x%x\n", (unsigned int) calc_crc, (calc_crc == orig_crc)?"=":"!=", (unsigned int) orig_crc);
@@ -456,40 +503,40 @@ void sys_tick_handler(void) {
 uint8_t
 get_boot_cause(void)
 {
-	uint16_t r;
+	uint32_t r;
 	uint8_t k = 0xf;
 
-	r = (RCC_RSR >> 16) & 0xffff;
+	r = RCC_RSR;
 
 	RCC_RSR |= RCC_RSR_RMVF; /* clear reset flag */
 
-	if (r & 0x3000) {
+	if (r & (RCC_RSR_WWDG1RSTF | RCC_RSR_WWDG2RSTF)) {
 		/* wwdg1/2 reset */
 		k = 1;
-	} else if (r & 0xC00) {
+	} else if (r & (RCC_RSR_IWDG1RSTF | RCC_RSR_IWDG2RSTF)) {
 		/* iwdg1/2 reset */
 		k = 2;
-	} else if (r & 0x300) {
+	} else if (r & (RCC_RSR_SFT1RSTF | RCC_RSR_SFT2RSTF)) {
 		/* system 1/2 reset */
 		k = 3;
-	} else if (r & 0x80) {
+	} else if (r & RCC_RSR_PORRSTF) {
 		/* POR rest */
 		k = 4;
-	} else if (r & 0x40) {
+	} else if (r & RCC_RSR_PINRSTF) {
 		/* PIN/NRST reset */
 		k = 5;
-	} else if (r & 0x20) {
+	} else if (r & RCC_RSR_BORRSTF) {
 		/* BOR reset */
 		k = 6;
-	} else if (r & 0x10) {
+	} else if (r & RCC_RSR_D2RSTF) {
 		/* D2 power rest */
 		k = 7;
-	} else if (r & 0x08) {
+	} else if (r & RCC_RSR_D1RSTF) {
 		/* D1 power rest */
 		k = 8;
 	}
 
-	if (r & 0x4) /* CPU2 reset */
+	if (r & RCC_RSR_CPU2RSTF) /* CPU2 reset */
 		k += (k << 4);
 	return k;
 }
