@@ -13,6 +13,7 @@
 
 #include <libopencm3/cm3/vector.h>
 #include <libopencm3/cm3/nvic.h>
+#include <libopencm3/cm3/scb.h>
 #include <libopencm3/stm32/pwr.h>
 #include <libopencm3/stm32/iwdg.h>
 #include <libopencm3/stm32/flash.h>
@@ -30,7 +31,7 @@ enum rcc_clock {
 
 //extern const struct rcc_clock_scale rcc_clock_config[];
 const struct rcc_pll_config rcc_clock_config[] = {
-	{ /* 480MHz PLL from HSI */
+	{ /* 240MHz PLL from HSI */
 		.sysclock_source = RCC_PLL, /* HSI 64M */
 		.pll_source = RCC_PLLCKSELR_PLLSRC_HSI,
 		.hse_frequency = 25 * 1000000,
@@ -460,6 +461,7 @@ _write(int file, char *ptr, int len)
 int
 main(void)
 {
+	scb_set_priority_grouping(SCB_AIRCR_PRIGROUP_GROUP16_NOSUB);
 	rcc_clock_setup_pll(&(rcc_clock_config[0]));
 	setup_usart3();
 	iwdg_set_period_ms(3000); /* 3s */
