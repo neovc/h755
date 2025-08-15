@@ -43,12 +43,12 @@
 
 #include <stdint.h>
 
-#define RUNNING_CLOCK                         480
+#define RUNNING_CLOCK                         240
 #define FREERTOS_VERSION                      11
 
 #define configCPU_CLOCK_HZ                    (RUNNING_CLOCK * 1000000)
 #define configTICK_RATE_HZ                    ((TickType_t)1000) /* 1000 */
-#define configTOTAL_HEAP_SIZE                 ((size_t)(131072)) /* 128 K */
+#define configTOTAL_HEAP_SIZE                 ((size_t)(32768)) /* 32 K */
 #define configMINIMAL_STACK_SIZE              ((unsigned short)130)
 #define configCHECK_FOR_STACK_OVERFLOW        0
 #define configMAX_PRIORITIES                  (5)
