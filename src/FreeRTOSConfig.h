@@ -43,8 +43,8 @@
 
 #include <stdint.h>
 
-#define RUNNING_CLOCK                         240
-#define FREERTOS_VERSION                      11
+#define RUNNING_CLOCK                         120
+#define FREERTOS_VERSION                      10
 
 #define configCPU_CLOCK_HZ                    (RUNNING_CLOCK * 1000000)
 #define configTICK_RATE_HZ                    ((TickType_t)1000) /* 1000 */

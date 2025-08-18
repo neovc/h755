@@ -33,7 +33,7 @@ enum rcc_clock {
 
 //extern const struct rcc_clock_scale rcc_clock_config[];
 const struct rcc_pll_config rcc_clock_config[] = {
-	{ /* 240MHz PLL from HSI */
+	{ /* 120MHz PLL from HSI */
 		.sysclock_source = RCC_PLL, /* HSI 64M */
 		.pll_source = RCC_PLLCKSELR_PLLSRC_HSI,
 		.hse_frequency = 25 * 1000000,
@@ -278,7 +278,7 @@ void
 uptime_cmd(int argc, char **argv)
 {
 	uptime = xTaskGetTickCount() / (pdMS_TO_TICKS(1000));
-	printf("built at %s %s, up %d secs, FreeRTOS %s, boot cause #%d\n", __DATE__, __TIME__, uptime, tskKERNEL_VERSION_NUMBER, boot_cause);
+	printf("built at %s %s, up %d secs, FreeRTOS %s, boot cause #0x%x\n", __DATE__, __TIME__, uptime, tskKERNEL_VERSION_NUMBER, boot_cause);
 }
 
 void
@@ -367,7 +367,8 @@ init_task(void *unused)
 {
 	freertos_started = 1;
 
-	printf("APP CALC 0x%x %s ORIG 0x%x\n", (unsigned int) calc_crc, (calc_crc == orig_crc)?"=":"!=", (unsigned int) orig_crc);
+	printf("APP LENGTH #%d, CALC 0x%x\n", (int) rom_app_size, (unsigned int) calc_crc);
+	//printf("APP CALC 0x%x %s ORIG 0x%x\n", (unsigned int) calc_crc, (calc_crc == orig_crc)?"=":"!=", (unsigned int) orig_crc);
 
 	if (pdPASS != xTaskCreate(usart3_cmd_handler, "UART", 400, NULL, 2, NULL)) {
 		printf("USART TASK ERROR\n");
