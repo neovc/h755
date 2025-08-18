@@ -23,6 +23,8 @@
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/usart.h>
 
+#define PROG_MAGIC "FLBN"
+
 enum rcc_clock {
         RCC_CLOCK_CONFIG_HSI_480M,
         RCC_CLOCK_CONFIG_HSE25M_PLL_480M,
@@ -317,7 +319,7 @@ help_cmd(int argc, char **argv)
 void
 usart3_cmd_handler(void *args)
 {
-	char gosh_prompt[] = "G071> ";
+	char gosh_prompt[] = "H755 > ";
 	char cmd[RECV_BUF_SIZE], *argv[MAX_ARGS], *p;
 	int len, i, argc, pos;
 
@@ -435,8 +437,7 @@ check_bin_file(uint32_t start, int size, uint32_t *crc, uint32_t *crc2)
 	p = (char *)(start);
 	*crc = crc32_memory((uint8_t *) p, size);
 	/* check magic of flash binary */
-#define MAGIC "UPBN"
-	if (memcmp(p + size, MAGIC, 4) != 0) {
+	if (memcmp(p + size, PROG_MAGIC, 4) != 0) {
 		*crc2 = -1;
 	} else {
 		memcpy(crc2, p + size + 4, 4);
