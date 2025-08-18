@@ -465,11 +465,14 @@ _write(int file, char *ptr, int len)
 int
 main(void)
 {
+	unsigned int cpuid;
+
 	scb_set_priority_grouping(SCB_AIRCR_PRIGROUP_GROUP16_NOSUB);
 	rcc_clock_setup_pll(&(rcc_clock_config[0]));
 	setup_usart3();
 	iwdg_set_period_ms(3000); /* 3s */
 
+	cpuid = MMIO32(0xE000ed00);
 	boot_cause = get_boot_cause();
 
 	/* Start IWDG */
@@ -478,10 +481,10 @@ main(void)
 	rom_app_size = (uint32_t) (&__app_size__);
 	app_start = (uint32_t) (&__app_start__);
 
-	printf("HELLO WORLD\n");
+	printf("HELLO WORLD, CPUID 0x%x, last boot cause 0x%x\n", cpuid, boot_cause);
 	check_bin_file(app_start, rom_app_size, &calc_crc, &orig_crc);
 
-	if (pdPASS != xTaskCreate(init_task, "INIT", 500, NULL, 4, NULL)) {
+	if (pdPASS != xTaskCreate(init_task, "INIT", 500, NULL, 4 | portPRIVILEGE_BIT, NULL)) {
 		printf("init task error\n");
 	}
 	iwdg_reset();
