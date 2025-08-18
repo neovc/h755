@@ -69,9 +69,12 @@ typedef unsigned long    UBaseType_t;
 /* 32-bit tick type on a 32-bit architecture, so reads of the tick count do
  * not need to be guarded with a critical section. */
     #define portTICK_TYPE_IS_ATOMIC    1
-#else
+#elif ( configTICK_TYPE_WIDTH_IN_BITS == TICK_TYPE_WIDTH_64_BITS )
+    typedef uint64_t TickType_t;
+    #define portMAX_DELAY              ( TickType_t ) 0xffffffffffffffffULL
+#else /* if ( configTICK_TYPE_WIDTH_IN_BITS == TICK_TYPE_WIDTH_16_BITS ) */
     #error configTICK_TYPE_WIDTH_IN_BITS set to unsupported tick type width.
-#endif
+#endif /* if ( configTICK_TYPE_WIDTH_IN_BITS == TICK_TYPE_WIDTH_16_BITS ) */
 /*-----------------------------------------------------------*/
 
 /* Architecture specifics. */
@@ -214,11 +217,9 @@ portFORCE_INLINE static void vPortRaiseBASEPRI( void )
     __asm volatile
     (
         "   mov %0, %1                                              \n" \
-        "   cpsid i                                                 \n" \
         "   msr basepri, %0                                         \n" \
         "   isb                                                     \n" \
         "   dsb                                                     \n" \
-        "   cpsie i                                                 \n" \
         : "=r" ( ulNewBASEPRI ) : "i" ( configMAX_SYSCALL_INTERRUPT_PRIORITY ) : "memory"
     );
 }
@@ -233,11 +234,9 @@ portFORCE_INLINE static uint32_t ulPortRaiseBASEPRI( void )
     (
         "   mrs %0, basepri                                         \n" \
         "   mov %1, %2                                              \n" \
-        "   cpsid i                                                 \n" \
         "   msr basepri, %1                                         \n" \
         "   isb                                                     \n" \
         "   dsb                                                     \n" \
-        "   cpsie i                                                 \n" \
         : "=r" ( ulOriginalBASEPRI ), "=r" ( ulNewBASEPRI ) : "i" ( configMAX_SYSCALL_INTERRUPT_PRIORITY ) : "memory"
     );
 

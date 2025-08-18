@@ -27,7 +27,7 @@
  */
 
 /*-----------------------------------------------------------
-* Implementation of functions defined in portable.h for the ARM CM7 port.
+* Implementation of functions defined in portable.h for the ARM CM4F port.
 *----------------------------------------------------------*/
 
 /* Scheduler includes. */
@@ -55,6 +55,12 @@ typedef void ( * portISR_t )( void );
 #define portNVIC_PENDSVCLEAR_BIT              ( 1UL << 27UL )
 #define portNVIC_PEND_SYSTICK_SET_BIT         ( 1UL << 26UL )
 #define portNVIC_PEND_SYSTICK_CLEAR_BIT       ( 1UL << 25UL )
+
+/* Constants used to detect a Cortex-M7 r0p1 core, which should use the ARM_CM7
+ * r0p1 port. */
+#define portCPUID                             ( *( ( volatile uint32_t * ) 0xE000ed00 ) )
+#define portCORTEX_M7_r0p1_ID                 ( 0x410FC271UL )
+#define portCORTEX_M7_r0p0_ID                 ( 0x410FC270UL )
 
 #define portMIN_INTERRUPT_PRIORITY            ( 255UL )
 #define portNVIC_PENDSV_PRI                   ( ( ( uint32_t ) portMIN_INTERRUPT_PRIORITY ) << 16UL )
@@ -299,6 +305,12 @@ static void prvPortStartFirstTask( void )
  */
 BaseType_t xPortStartScheduler( void )
 {
+    /* This port can be used on all revisions of the Cortex-M7 core other than
+     * the r0p1 parts.  r0p1 parts should use the port from the
+     * /source/portable/GCC/ARM_CM7/r0p1 directory. */
+    configASSERT( portCPUID != portCORTEX_M7_r0p1_ID );
+    configASSERT( portCPUID != portCORTEX_M7_r0p0_ID );
+
     /* An application can install FreeRTOS interrupt handlers in one of the
      * folllowing ways:
      * 1. Direct Routing - Install the functions vPortSVCHandler and
@@ -511,11 +523,9 @@ void xPortPendSVHandler( void )
         "                                       \n"
         "   stmdb sp!, {r0, r3}                 \n"
         "   mov r0, %0                          \n"
-        "   cpsid i                             \n" /* ARM Cortex-M7 r0p1 Errata 837070 workaround. */
         "   msr basepri, r0                     \n"
         "   dsb                                 \n"
         "   isb                                 \n"
-        "   cpsie i                             \n" /* ARM Cortex-M7 r0p1 Errata 837070 workaround. */
         "   bl vTaskSwitchContext               \n"
         "   mov r0, #0                          \n"
         "   msr basepri, r0                     \n"
