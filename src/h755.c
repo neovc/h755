@@ -68,7 +68,7 @@ const struct rcc_pll_config rcc_clock_config[] = {
 		/* domain 3 */
 		.ppre4 = RCC_D3CFGR_D3PPRE_DIV2,
 		.flash_waitstates = FLASH_ACR_LATENCY_3WS, // FOR ALL F_ACLK
-		.power_mode = PWR_SYS_LDO,
+		.power_mode = PWR_SYS_SMPS_DIRECT,
 		.voltage_scale = PWR_VOS_SCALE_1,
 		.smps_level = PWR_CR3_SMPSLEVEL_2P5V,
 	},
@@ -78,7 +78,7 @@ extern unsigned __app_size__, __app_start__;
 
 uint32_t rom_app_size = 0, app_start = 0;
 uint32_t calc_crc, orig_crc;
-int uptime = 0, to_feed_iwdg = 0;
+int uptime = 0, to_feed_iwdg = 1;
 
 int _write(int file, char *ptr, int len);
 uint8_t freertos_started = 0, boot_cause = 0;
@@ -284,6 +284,7 @@ uptime_cmd(int argc, char **argv)
 void
 reset_cmd(int argc, char **argv)
 {
+	to_feed_iwdg = 0;
 }
 
 const command_t gosh_cmds[] = {
@@ -365,6 +366,8 @@ static void
 init_task(void *unused)
 {
 	freertos_started = 1;
+
+	printf("APP CALC 0x%x %s ORIG 0x%x\n", (unsigned int) calc_crc, (calc_crc == orig_crc)?"=":"!=", (unsigned int) orig_crc);
 
 	if (pdPASS != xTaskCreate(usart3_cmd_handler, "UART", 400, NULL, 2, NULL)) {
 		printf("USART TASK ERROR\n");
@@ -478,7 +481,6 @@ main(void)
 	printf("HELLO WORLD\n");
 	check_bin_file(app_start, rom_app_size, &calc_crc, &orig_crc);
 
-	printf("APP CALC 0x%x %s ORIG 0x%x\n", (unsigned int) calc_crc, (calc_crc == orig_crc)?"=":"!=", (unsigned int) orig_crc);
 	if (pdPASS != xTaskCreate(init_task, "INIT", 500, NULL, 4, NULL)) {
 		printf("init task error\n");
 	}
