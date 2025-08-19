@@ -36,7 +36,7 @@ const struct rcc_pll_config rcc_clock_config[] = {
 	{ /* 120MHz PLL from HSI */
 		.sysclock_source = RCC_PLL, /* HSI 64M */
 		.pll_source = RCC_PLLCKSELR_PLLSRC_HSI,
-		.hse_frequency = 25 * 1000000,
+		.hse_frequency = 0, // STM32H755 nucleo has no X2 HSE crystal, 25 * 1000000,
 		.pll1 = {
 			.divm = 4, /* 64/4 = 16M */
 			.divn = 30, /* 16*30 = 480M */
