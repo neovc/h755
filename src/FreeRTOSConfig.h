@@ -79,6 +79,9 @@
 
 #define configENFORCE_SYSTEM_CALLS_FROM_KERNEL_ONLY	0
 #define configALLOW_UNPRIVILEGED_CRITICAL_SECTIONS	0
+/* FreeRTOS 10.6 added */
+#define configENABLE_ACCESS_CONTROL_LIST    0
+#define configUSE_MPU_WRAPPERS_V1    0
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
