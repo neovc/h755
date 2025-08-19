@@ -14,10 +14,12 @@
 #include <libopencm3/cm3/vector.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/cm3/scb.h>
+#include <libopencm3/cm3/systick.h>
 #include <libopencm3/stm32/pwr.h>
 #include <libopencm3/stm32/iwdg.h>
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/syscfg.h>
+#include <libopencm3/stm32/dbgmcu.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/timer.h>
@@ -367,7 +369,7 @@ init_task(void *unused)
 {
 	freertos_started = 1;
 
-	printf("APP LENGTH #%d, CALC 0x%x\n", (int) rom_app_size, (unsigned int) calc_crc);
+	printf("APP LENGTH #%d, CALC CRC 0x%x\n", (int) rom_app_size, (unsigned int) calc_crc);
 	//printf("APP CALC 0x%x %s ORIG 0x%x\n", (unsigned int) calc_crc, (calc_crc == orig_crc)?"=":"!=", (unsigned int) orig_crc);
 
 	if (pdPASS != xTaskCreate(usart3_cmd_handler, "UART", 400, NULL, 2, NULL)) {
@@ -466,7 +468,7 @@ _write(int file, char *ptr, int len)
 int
 main(void)
 {
-	unsigned int cpuid;
+	unsigned int cpuid, tick_calib, devid;
 
 	scb_set_priority_grouping(SCB_AIRCR_PRIGROUP_GROUP16_NOSUB);
 	rcc_clock_setup_pll(&(rcc_clock_config[0]));
@@ -474,6 +476,9 @@ main(void)
 	iwdg_set_period_ms(3000); /* 3s */
 
 	cpuid = MMIO32(0xE000ed00);
+	devid = DBGMCU_IDCODE & 0x0FFF;
+	tick_calib = systick_get_calib();
+
 	boot_cause = get_boot_cause();
 
 	/* Start IWDG */
@@ -482,7 +487,8 @@ main(void)
 	rom_app_size = (uint32_t) (&__app_size__);
 	app_start = (uint32_t) (&__app_start__);
 
-	printf("HELLO WORLD, CPUID 0x%x, last boot cause 0x%x\n", cpuid, boot_cause);
+	printf("HELLO WORLD\nCPUID 0x%x, DEVID 0x%x, SYSTICK CALIB %d, BOOT CAUSE 0x%x\n", cpuid, devid, tick_calib, boot_cause);
+
 	check_bin_file(app_start, rom_app_size, &calc_crc, &orig_crc);
 
 	if (pdPASS != xTaskCreate(init_task, "INIT", 500, NULL, 4 | portPRIVILEGE_BIT, NULL)) {
