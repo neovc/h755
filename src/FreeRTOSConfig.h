@@ -44,7 +44,7 @@
 #include <stdint.h>
 
 #define RUNNING_CLOCK                         120
-#define FREERTOS_VERSION                      10
+#define FREERTOS_VERSION                      11
 
 #define configCPU_CLOCK_HZ                    (RUNNING_CLOCK * 1000000)
 #define configTICK_RATE_HZ                    ((TickType_t)1000) /* 1000 */
@@ -80,8 +80,11 @@
 #define configENFORCE_SYSTEM_CALLS_FROM_KERNEL_ONLY	0
 #define configALLOW_UNPRIVILEGED_CRITICAL_SECTIONS	0
 /* FreeRTOS 10.6 added */
-#define configENABLE_ACCESS_CONTROL_LIST    0
-#define configUSE_MPU_WRAPPERS_V1    0
+#define configENABLE_ACCESS_CONTROL_LIST      0
+#define configUSE_MPU_WRAPPERS_V1             0
+
+/* FreeRTOS 11 added */
+#define configCHECK_HANDLER_INSTALLATION      0
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
