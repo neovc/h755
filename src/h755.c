@@ -42,7 +42,7 @@ const struct rcc_pll_config rcc_clock_config[] = {
 		.pll1 = {
 			.divm = 4, /* 64/4 = 16M */
 			.divn = 30, /* 16*30 = 480M */
-			.divp = 2, /* DIV2 */
+			.divp = 2, /* DIV2, pll1.p = 240M */
 			.divq = 2,
 			.divr = 2,
 		},
@@ -61,14 +61,14 @@ const struct rcc_pll_config rcc_clock_config[] = {
 			.divr = 2,
 		},
 		/* domain 1 */
-		.core_pre = RCC_D1CFGR_D1CPRE_DIV2,
-		.hpre = RCC_D1CFGR_D1HPRE_DIV2,
-		.ppre3 = RCC_D1CFGR_D1PPRE_DIV2,
+		.core_pre = RCC_D1CFGR_D1CPRE_DIV2, /* 240/2 = 120M M7 CORE */
+		.hpre = RCC_D1CFGR_D1HPRE_DIV2, /* 120/2 = 60M M4 CORE, AHB3/AXI/AHB1/AHB2/AHB4 CLOCK */
+		.ppre3 = RCC_D1CFGR_D1PPRE_DIV2, /* APB3 CLOCK 30M */
 		/* domain 2 */
-		.ppre1 = RCC_D2CFGR_D2PPRE_DIV2,
-		.ppre2 = RCC_D2CFGR_D2PPRE_DIV2,
+		.ppre1 = RCC_D2CFGR_D2PPRE_DIV2, /* APB1 CLOCK 30M */
+		.ppre2 = RCC_D2CFGR_D2PPRE_DIV2, /* APB2 CLOCK 30M */
 		/* domain 3 */
-		.ppre4 = RCC_D3CFGR_D3PPRE_DIV2,
+		.ppre4 = RCC_D3CFGR_D3PPRE_DIV2, /* APB4 CLOCK 30M */
 		.flash_waitstates = FLASH_ACR_LATENCY_3WS, // FOR ALL F_ACLK
 		.power_mode = PWR_SYS_SMPS_DIRECT,
 		.voltage_scale = PWR_VOS_SCALE_1,
