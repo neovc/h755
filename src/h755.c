@@ -499,10 +499,9 @@ init_adc3(void)
 	adc_power_off(adc);
 	calibrate_adc(adc);
 
-	adc_set_clk_prescale(adc, ADC_CCR_PRESC_DIV2);
-	adc_set_clk_source(adc, ADC_CCR_CKMODE_DIV1);
+	adc_set_clk_source(adc, ADC_CCR_CKMODE_DIV2); /* CKMODE_DIV2 works */
+
 	/* enable temperature & Vref & Vss */
-	//ADC_CCR(adc) |= ADC_CCR_TSEN | ADC_CCR_VREFEN;
 	ADC_CCR(adc) |= ADC_CCR_TSEN | ADC_CCR_VREFEN | ADC_CCR_VBATEN;
 	adc_set_sample_time_on_all_channels(adc, ADC_SMPR_SMP_64DOT5CYC);
 
