@@ -472,36 +472,48 @@ _write(int file, char *ptr, int len)
 }
 
 void
+calibrate_adc(uint32_t adc)
+{
+	/* Calibrate ADC3 in Single Ended & Differential Mode */
+	/* Single Ended */
+	ADC_CR(adc) &= ~(ADC_CR_ADCALDIF | ADC_CR_ADCALLIN);
+	adc_calibrate(adc);
+
+	/* Differential Mode */
+	ADC_CR(adc) |= (ADC_CR_ADCALDIF | ADC_CR_ADCALLIN);
+	adc_calibrate(adc);
+}
+
+void
 init_adc3(void)
 {
 	uint32_t adc = ADC3;
 
 	rcc_periph_clock_enable(RCC_ADC3);
 
-	adc_power_off(adc);
 	adc_disable_deeppwd(adc);
 	adc_enable_regulator(adc);
+
+	while (!(ADC_ISR(adc) & ADC_ISR_LDORDY)) ;
+
+	adc_power_off(adc);
+	calibrate_adc(adc);
+
+	adc_set_clk_prescale(adc, ADC_CCR_PRESC_DIV2);
+	adc_set_clk_source(adc, ADC_CCR_CKMODE_DIV1);
+	/* enable temperature & Vref & Vss */
+	//ADC_CCR(adc) |= ADC_CCR_TSEN | ADC_CCR_VREFEN;
+	ADC_CCR(adc) |= ADC_CCR_TSEN | ADC_CCR_VREFEN | ADC_CCR_VBATEN;
 	adc_set_sample_time_on_all_channels(adc, ADC_SMPR_SMP_64DOT5CYC);
 
-	/* enable temperature & Vref & Vss */
-	ADC_CCR(adc) |= ADC_CCR_TSEN | ADC_CCR_VREFEN | ADC_CCR_VBATEN;
-
-	/* Calibrate ADC3 in Single Ended & Differential Mode */
-	/* Single Ended */
-	ADC_CR(adc) &= ~ADC_CR_ADCALDIF;
-	ADC_CR(adc) |= ADC_CR_ADCALLIN;
-	adc_calibrate(adc);
-	/* Differential Mode */
-	ADC_CR(adc) &= ~ADC_CR_ADCALLIN;
-	ADC_CR(adc) |= ADC_CR_ADCALDIF;
-	adc_calibrate(adc);
-
-	adc_set_single_conversion_mode(adc);
 	ADC_ISR(adc) |= ADC_ISR_ADRDY; /* clear ADC3's Ready Flag */
 	ADC_PCSEL(adc) |= (1 << 17) | (1 << 18) | (1 << 19);
+	// ADC_DIFSEL(adc) |= (1 << 17) | (1 << 18) | (1 << 19);
 	adc_power_on(adc);
 
-	printf("ADC CCR = 0x%x, ADC CR = 0x%x, ADC DIFSEL = 0x%x, PCSEL = 0x%x\n", (int)ADC_CCR(adc), (int) ADC_CR(adc), (int) ADC_DIFSEL(adc), (int) ADC_PCSEL(adc));
+	printf("ADC3 CCR = 0x%x, ADC3 CR = 0x%x, ACD3 ISR = 0x%x\nADC3 DIFSEL = 0x%x, ADC3 PCSEL = 0x%x\n",
+			(int)ADC_CCR(adc), (int) ADC_CR(adc), (int) ADC_ISR(adc),
+			(int) ADC_DIFSEL(adc), (int) ADC_PCSEL(adc));
 }
 
 void
@@ -517,20 +529,19 @@ adc3_cmd(int argc, char **argv)
 	   Channel 18 Vtemp
 	   Channel 19 VRef
 	 */
+	adc_set_single_conversion_mode(adc);
 	channel[0] = 17;
 	channel[1] = 18;
 	channel[2] = 19;
+	adc_set_regular_sequence(adc, 3, channel);
+	adc_start_conversion_regular(adc);
 	for (i = 0; i < 3; i ++) {
-		channel[0] = 17 + i;
-		adc_set_regular_sequence(adc, 1, channel);
-		adc_start_conversion_regular(adc);
-		j = 0;
+		j = v = 0;
 		while ((j < ADC_LOOP) && !adc_eoc(adc))
 			j ++;
 		if (j < ADC_LOOP) {
 			v = adc_read_regular(adc);
-			printf("ADC3 CHANNEL #%d -> VALUE %d/0x%x, j = %d\n", channel[0], (int) v, (int) v, j);
-			v = 0;
+			printf("ADC3 CHANNEL #%d -> VALUE %d/0x%x, j = %d\n", channel[i], (int) v, (int) v, j);
 		}
 	}
 }
